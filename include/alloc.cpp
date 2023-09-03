@@ -6,6 +6,8 @@
 #include <cstdlib>  // for exit()
 #include <climits>  // for UINT_MAX
 #include <iostream> // for cerr
+#include <vector>
+#include "A.h"
 
 namespace jz
 {
@@ -64,6 +66,14 @@ public:
         return size_type(UINTMAX_MAX / sizeof(T));
     }
 };
+void test() {
+    std::vector<A, allocator<A>> v;
+    A a1(7.9226, "USD/CNY");
+    v.push_back(a1);
+    for (auto& it : v) {
+        cout << it;
+    }
+}
 }; // namespace jz
 
 #endif

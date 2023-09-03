@@ -1,7 +1,6 @@
 /*
     测试STL各个容器的迭代器类型
 */
-#include "alloc.h"
 #include <vector>
 #include <array>
 #include <deque>
@@ -15,6 +14,9 @@
 #include <iterator>
 
 using namespace std;
+namespace jz
+{
+
 void _display(input_iterator_tag) {
     cout << "input_iterator_tag" << endl;
 }
@@ -36,7 +38,8 @@ void display(T Itr) {
     _display(cagy);
     cout << "typeid(Itr).name()=" << typeid(Itr).name() << endl;
 }
-int main(int argc, char** argv) {
+
+void test() {
     display(array<int, 1>::iterator());
     display(vector<int>::iterator());
     display(forward_list<int>::iterator());
@@ -48,5 +51,6 @@ int main(int argc, char** argv) {
     display(unordered_set<int>::iterator());
     display(istream_iterator<int>());
     display(ostream_iterator<int>(cout, ""));
-    return 0;
 }
+
+} // namespace jz

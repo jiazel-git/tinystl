@@ -1,6 +1,6 @@
-# 本项目代码均来自STL源码剖析书中示例代码 
-## Allocater(分配器) 
-### 设计一个简单的空间适配器 
-## Iterator(迭代器) 
-    
-    
+# STL源码剖析学习记录 
+## Allocater(分配器)  
+alloc.cpp中定义了一个简单的分配器，用来进行内存的分配与释放 
+## Iterator(迭代器)
+## Containers(容器)
+
