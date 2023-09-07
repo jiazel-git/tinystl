@@ -7,6 +7,7 @@ enable_testing()
 
 aux_source_directory(./src all_src)
 include_directories(./include)
+include_directories(./test)
 add_executable(main ${all_src})
 
 
