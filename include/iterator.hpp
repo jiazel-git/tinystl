@@ -46,7 +46,7 @@ template <class Category, class T, class Distance = ptrdiff_t, class Pointer = T
 struct iterator
 {
     using iterator_category = Category;
-    using value_type        = T;
+    using value_type        = typename std::remove_const<T>::type;
     using difference_type   = Distance;
     using pointer           = Pointer;
     using reference         = Reference;
