@@ -30,7 +30,7 @@ public:
     }
     vector(const vector& other) {
         size_t n = other._capacity - other._start;
-        construct(n, other.begin(), other.end());
+        construct(n, other.cbegin(), other.cend());
     }
     template <typename InputIterator,
               typename Require = RequireInputIterator<InputIterator>>
@@ -314,6 +314,13 @@ public:
     }
     iterator insert(const_iterator pos, initializer_list<value_type> il) {
         insert(pos, il.begin(), il.end());
+    }
+    template <typename... Args>
+    void emplace_back(Args&&... args) {
+        if (_end == _capacity) {
+            expand();
+        }
+        _alloc.construct(_end++, std::forward<Args>(args)...);
     }
     ~vector() {
         destroy();
