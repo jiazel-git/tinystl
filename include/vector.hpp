@@ -146,7 +146,8 @@ public:
                 }
             }
         } else {
-            expand();
+            auto new_capacity = n;
+            expand_enough(new_capacity);
             difference_type distance = n - size();
             while (distance--) {
                 *(_end++) = value_type();
@@ -166,7 +167,8 @@ public:
                 }
             }
         } else {
-            expand();
+            auto new_capacity = n;
+            expand_enough(new_capacity);
             difference_type distance = n - size();
             while (distance--) {
                 *(_end++) = val;
@@ -176,7 +178,7 @@ public:
     // 改变容器大小，不创建对象
     void reserve(size_type n) {
         if (n > capacity()) {
-            expand();
+            expand_enough(n);
         }
     }
     template <typename InputIterator,
@@ -251,13 +253,14 @@ public:
         return p;
     }
     iterator insert(const_iterator pos, size_type n, const value_type& val) {
-        auto p = const_cast<iterator>(pos);
+        auto p        = const_cast<iterator>(pos);
+        auto distance = _end - pos;
         if (_end + n > _capacity) {
-            auto offset = pos - const_cast<const_iterator>(_start);
-            expand();
+            auto offset       = pos - const_cast<const_iterator>(_start);
+            auto new_capacity = size() + n;
+            expand_enough(new_capacity);
             p = _start + offset;
         }
-        auto distance = _end - pos;
 
         auto tmp = _end - 1;
         _end += n;
@@ -274,15 +277,15 @@ public:
     template <typename InputIterator,
               typename Require = RequireInputIterator<InputIterator>>
     iterator insert(const_iterator pos, InputIterator first, InputIterator last) {
-        auto p   = const_cast<iterator>(pos);
-        size_t n = last - first;
+        auto p        = const_cast<iterator>(pos);
+        auto distance = _end - pos;
+        size_t n      = last - first;
         if (_end + n > _capacity) {
-            auto offset = pos - const_cast<const_iterator>(_start);
-            expand();
+            auto offset       = pos - const_cast<const_iterator>(_start);
+            auto new_capacity = size() + (last - first);
+            expand_enough(new_capacity);
             p = _start + offset;
         }
-        auto distance = _end - pos;
-
         auto tmp = _end - 1;
         _end += n;
         while (distance--) {
@@ -313,7 +316,7 @@ public:
         return p;
     }
     iterator insert(const_iterator pos, initializer_list<value_type> il) {
-        insert(pos, il.begin(), il.end());
+        return insert(pos, il.begin(), il.end());
     }
     template <typename... Args>
     void emplace_back(Args&&... args) {
@@ -369,6 +372,15 @@ private:
     void destruct(iterator first, iterator end) {
         for (auto it = first; it != end; ++it) {
             _alloc.destroy(it);
+        }
+    }
+    void expand_enough(size_t n) {
+        auto old_copy = *this;
+        _start        = _alloc.allocate(n);
+        _end          = _start;
+        _capacity     = _start + n;
+        for (auto it = old_copy.begin(); it != old_copy.end(); ++it) {
+            *(_end++) = std::move(*it);
         }
     }
 
