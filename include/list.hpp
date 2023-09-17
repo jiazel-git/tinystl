@@ -341,12 +341,38 @@ public:
         prev->_next = std::move(last);
         return get_raw(prev->_next);
     }
-    void merge(list& x) {}
-    void merge(list&& x) {}
+    void merge(list& other) {
+        merge(std::move(other));
+    }
+    void merge(list&& other) {
+        merge(other, std::less<value_type>());
+    }
     template <class Compare>
-    void merge(list& x, Compare comp) {}
+    void merge(list& other, Compare comp) {
+        merge(std::move(other), comp);
+    }
     template <class Compare>
-    void merge(list&& x, Compare comp) {}
+    void merge(list&& other, Compare comp) {
+        list new_list;
+        auto it1 = cbegin();
+        auto it2 = other.cbegin();
+        while (it1 != cend() && it2 != other.cend()) {
+            if (comp(*it1, *it2)) {
+                new_list.push_back(*it1);
+                ++it1;
+            } else {
+                new_list.push_back(*it2);
+                ++it2;
+            }
+        }
+        while (it1 != cend()) {
+            new_list.push_back(*(it1++));
+        }
+        while (it2 != other.cend()) {
+            new_list.push_back(*(it2++));
+        }
+        swap(new_list);
+    }
     void pop_back() {
         auto prev    = _tail->_prev->_prev;
         prev->_next  = std::move(prev->_next->_next);
@@ -416,18 +442,39 @@ public:
         }
     }
     void reverse() noexcept {}
-    void sort() {}
+    void sort() {
+        sort(std::less<value_type>());
+    }
     template <class Compare>
-    void sort(Compare comp) {}
+    void sort(Compare comp) {
+    }
     void splice(const_iterator posion, list& x) {}
     void splice(const_iterator posion, list&& x) {}
     void splice(const_iterator position, list& x, const_iterator i) {}
     void splice(const_iterator position, list&& x, const_iterator i) {}
     void splice(const_iterator position, list& x, const_iterator first, const_iterator last) {}
     void splice(const_iterator position, list&& x, const_iterator first, const_iterator last) {}
-    void unique() {}
+    void unique() {
+        unique(std::equal_to<value_type>());
+    }
     template <class BinaryPredicate>
-    void unique(BinaryPredicate binary_pred) {}
+    void unique(BinaryPredicate binary_pred) {
+        if (_size < 2) {
+            return;
+        }
+        auto last    = cend();
+        auto current = cbegin();
+        auto prev    = current;
+        ++current;
+        while (current != last) {
+            if (binary_pred(*prev, *current)) {
+                current = erase(current);
+            } else {
+                prev = current;
+                ++current;
+            }
+        }
+    }
     ~list() = default;
     friend std::ostream& operator<<(std::ostream& os, list& l) {
         for (auto it = l.begin(); it != l.end(); ++it) {
