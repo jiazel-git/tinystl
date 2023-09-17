@@ -23,6 +23,5 @@ int main(int argc, char** argv) {
     l.resize(12, 8);
     std::cout << l << std::endl;
     l.remove_if(comp());
-    std::cout << std::endl;
     return 0;
 }
