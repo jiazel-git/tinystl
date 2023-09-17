@@ -24,6 +24,5 @@ int main(int argc, char** argv) {
     std::cout << l << std::endl;
     l.remove_if(comp());
     std::cout << std::endl;
-    std::cout << l << std::endl;
     return 0;
 }
