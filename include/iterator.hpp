@@ -2,14 +2,25 @@
 #include <iostream>
 namespace jz {
 // 定义五种迭代器类型
-struct output_iterator_tag {};
-struct input_iterator_tag {};
-struct forward_iterator_tag : public input_iterator_tag {};
-struct bidirectional_iterator_tag : public forward_iterator_tag {};
-struct random_access_iterator_tag : public bidirectional_iterator_tag {};
+struct output_iterator_tag
+{
+};
+struct input_iterator_tag
+{
+};
+struct forward_iterator_tag : public input_iterator_tag
+{
+};
+struct bidirectional_iterator_tag : public forward_iterator_tag
+{
+};
+struct random_access_iterator_tag : public bidirectional_iterator_tag
+{
+};
 
 template < class Iter >
-struct iterator_traits {
+struct iterator_traits
+{
     using iterator_category = typename Iter::iterator_category;
     using value_type        = typename Iter::value_type;
     using reference         = typename Iter::reference;
@@ -18,7 +29,8 @@ struct iterator_traits {
 };
 // 偏特化版本
 template < typename T >
-struct iterator_traits< T* > {
+struct iterator_traits< T* >
+{
     using iterator_category = random_access_iterator_tag;
     using value_type        = T;
     using reference         = T&;
@@ -26,7 +38,8 @@ struct iterator_traits< T* > {
     using difference_type   = std::ptrdiff_t;
 };
 template < typename T >
-struct iterator_traits< const T* > {
+struct iterator_traits< const T* >
+{
     using iterator_category = random_access_iterator_tag;
     using value_type        = T;
     using reference         = const T&;
@@ -34,7 +47,8 @@ struct iterator_traits< const T* > {
     using difference_type   = std::ptrdiff_t;
 };
 template < class Category, class T, class Distance = ptrdiff_t, class Pointer = T*, class Reference = T& >
-struct iterator {
+struct iterator
+{
     using iterator_category = Category;
     using value_type        = typename std::remove_const< T >::type;
     using difference_type   = Distance;
@@ -46,7 +60,9 @@ class reverse_iterator : public iterator< typename iterator_traits< Iter >::iter
                                           typename iterator_traits< Iter >::value_type,
                                           typename iterator_traits< Iter >::difference_type,
                                           typename iterator_traits< Iter >::pointer,
-                                          typename iterator_traits< Iter >::reference > {
+                                          typename iterator_traits< Iter >::reference >
+{
+
 public:
     using iterator_type   = Iter;
     using difference_type = typename iterator_traits< Iter >::difference_type;

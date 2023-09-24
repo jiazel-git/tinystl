@@ -3,7 +3,8 @@
 #include <memory>
 namespace jz {
 template < class T >
-struct list_node {
+struct list_node
+{
     using node_raw_ptr   = list_node*;
     using node_ptr       = std::unique_ptr< list_node >;
     explicit list_node() = default;
@@ -24,7 +25,8 @@ struct list_node {
     using const_pointer   = const T*;
 };
 template < class T >
-class list_const_iterator {
+class list_const_iterator
+{
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type        = typename T::value_type;
@@ -97,7 +99,8 @@ protected:
     node_raw_ptr _cur;
 };
 template < class T >
-class list_iterator : public list_const_iterator< T > {
+class list_iterator : public list_const_iterator< T >
+{
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type        = typename T::value_type;
@@ -176,7 +179,8 @@ void swap( list_iterator< T >& left, list_iterator< T >& right ) {
     swap( left.data(), right.data() );
 }
 template < class T >
-class list {
+class list
+{
 public:
     using node_raw_ptr = list_node< T >*;
     using node_ptr     = std::unique_ptr< list_node< T > >;
