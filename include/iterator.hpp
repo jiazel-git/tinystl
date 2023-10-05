@@ -47,6 +47,7 @@ class reverse_iterator : public iterator< typename iterator_traits< Iter >::iter
                                           typename iterator_traits< Iter >::difference_type,
                                           typename iterator_traits< Iter >::pointer,
                                           typename iterator_traits< Iter >::reference > {
+
 public:
     using iterator_type   = Iter;
     using difference_type = typename iterator_traits< Iter >::difference_type;

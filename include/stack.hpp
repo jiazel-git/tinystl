@@ -1,6 +1,7 @@
 #ifndef __STACK
 #define __STACK
 #include "vector.hpp"
+#include <vector>
 namespace jz {
 template < class T, class Container = jz::vector< T > >
 class stack {
@@ -12,12 +13,9 @@ public:
     using size_type       = size_t;
 
 public:
-    stack()
-        : stack( Container() ) {}
-    explicit stack( const Container& container )
-        : stack( std::move( container ) ) {}
-    explicit stack( Container&& container )
-        : _container( std::move( container ) ) {}
+    stack() : stack( Container() ) {}
+    explicit stack( const Container& container ) : stack( std::move( container ) ) {}
+    explicit stack( Container&& container ) : _container( std::move( container ) ) {}
     stack( const stack& other ) {
         stack( std::move( other ) );
     }
@@ -65,17 +63,20 @@ public:
         return _container.size();
     }
     void push( const value_type& value ) {
-        push( std::move( value ) );
+        _container.push_back( value );
     }
     void push( value_type&& value ) {
         _container.push_back( std::move( value ) );
     }
     template < class... Args >
     void emplace( Args&&... args ) {
-        _container.emplace_back( std::forward< Args >( args )... );
+        _container.emplacebac( std::forward< Args >( args )... );
     }
     void pop() {
         _container.pop_back();
+    }
+    T* data() {
+        return _container.data();
     }
 
 private:
