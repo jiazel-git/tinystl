@@ -6,22 +6,23 @@
 // #include "vector_test.cpp"
 // #include "Vector_test.cpp"
 #include "list.hpp"
-#include <list>
-struct comp
-{
-    bool operator()(const int& x) {
+#include "stack.hpp"
+#include "vector.hpp"
+#include <forward_list>
+
+struct comp {
+    bool operator()( const int& x ) {
         return x % 2 == 0;
     }
 };
-int main(int argc, char** argv) {
+int main( int argc, char** argv ) {
     // jz::test();
-    jz::list<int> l{1, 2, 3, 4, 5};
-    l.insert(l.end(), 5, 6);
-    l.pop_back();
-    l.push_back(7);
-    l.push_front(0);
-    l.resize(12, 8);
-    std::cout << l << std::endl;
-    l.remove_if(comp());
+    jz::list< int >     l{ 1, 2, 3, 4, 5 };
+    auto                it = l.begin();
+    forward_list< int > fl{ 1, 2, 3, 4, 5 };
+    fl.push_front( 6 );
+    for ( auto& it : fl ) {
+        cout << it << " ";
+    }
     return 0;
 }

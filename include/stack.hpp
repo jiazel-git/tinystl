@@ -3,8 +3,7 @@
 #include "vector.hpp"
 namespace jz {
 template < class T, class Container = jz::vector< T > >
-class stack
-{
+class stack {
 public:
     using value_type      = T;
     using reference       = T&;
@@ -13,9 +12,12 @@ public:
     using size_type       = size_t;
 
 public:
-    stack() : stack( Container() ) {}
-    explicit stack( const Container& container ) : stack( std::move( container ) ) {}
-    explicit stack( Container&& container ) : _container( std::move( container ) ) {}
+    stack()
+        : stack( Container() ) {}
+    explicit stack( const Container& container )
+        : stack( std::move( container ) ) {}
+    explicit stack( Container&& container )
+        : _container( std::move( container ) ) {}
     stack( const stack& other ) {
         stack( std::move( other ) );
     }

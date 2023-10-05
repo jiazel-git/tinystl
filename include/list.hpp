@@ -290,7 +290,7 @@ public:
     iterator       rend() {}
     const_iterator crend() const {}
     bool           empty() {
-                  return get_raw( _head->_next ) == _tail;
+        return get_raw( _head->_next ) == _tail;
     }
     size_type size() {
         return _size;
