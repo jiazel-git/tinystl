@@ -126,7 +126,9 @@ public:
     forward_list( std::initializer_list< T > il ) {}
     forward_list& operator=( const forward_list& other ) {}
     forward_list& operator=( forward_list&& other ) noexcept {}
-    forward_list& operator=( std::initializer_list< T > il ) {}
+    forward_list& operator=( std::initializer_list< T > il ) {
+        // todo
+    }
     ~forward_list() {}
 
 private:
