@@ -209,6 +209,7 @@ public:
             p_   = tmp_;
             tmp_ = tmp_->next_;
             delete p_;
+            p_ = nullptr;
         }
     }
     bool empty() const noexcept {
@@ -251,6 +252,7 @@ public:
         nodeptr_ tmp_     = pos.data()->next_;
         pos.data()->next_ = pos.data()->next_->next_;
         delete tmp_;
+        tmp_ = nullptr;
         --size_;
         return pos.data()->next_;
     }
@@ -260,12 +262,13 @@ public:
             nodeptr_ p_ = it.data()->next_;
             ++it;
             delete p_;
+            p_ = nullptr;
         }
         return ( ++first ).data();
     }
     template < class... Args >
     iterator emplace_after( const_iterator pos, Args&&... args ) {
-        return insert_after( pos, std::forward( args )... );
+        return insert_after( pos, value_type( std::forward< Args >( args )... ) );
     }
     void resize( size_type n ) {
         resize( n, value_type() );
@@ -293,6 +296,23 @@ public:
             return;
         }
     }
+    void remove( const value_type& value ) {
+        remove_if( [ & ]( value_type val ) -> bool { return val == value; } );
+    }
+    template < class UnaryPredicate >
+    void remove_if( UnaryPredicate pred_ ) {
+        nodeptr_ tmp_ = head_;
+        while ( tmp_->next_ != nullptr ) {
+            if ( pred_( tmp_->next_->value_ ) ) {
+                nodeptr_ p_ = tmp_->next_;
+                tmp_->next_ = tmp_->next_->next_;
+                delete p_;
+                p_ = nullptr;
+                continue;
+            }
+            tmp_ = tmp_->next_;
+        }
+    }
     void swap( forward_list& other ) {
         using std::swap;
         swap( head_->next_, other.head_->next_ );
@@ -305,6 +325,7 @@ public:
             p_   = tmp_;
             tmp_ = tmp_->next_;
             delete p_;
+            p_ = nullptr;
         }
     }
     friend std::ostream& operator<<( std::ostream& os, const forward_list& fl ) {
