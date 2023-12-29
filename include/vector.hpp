@@ -4,7 +4,6 @@
 #include <iostream>
 #include <memory>
 
-
 using namespace std;
 namespace jz {
 template < typename T, typename Alloc = std::allocator< T > >
@@ -73,7 +72,7 @@ public:
         return _start;
     }
     const_iterator cbegin() const {
-        return const_cast< const_iterator >( _start );
+        return _start;
     }
     reverse_iterator rbegin() const {
         return _end;
@@ -85,13 +84,13 @@ public:
         return _end;
     }
     const_iterator cend() const {
-        return const_cast< const_iterator >( _end );
+        return _end;
     }
-    pointer data() const {
-        return const_cast< const_pointer >( _start );
+    const_pointer data() const {
+        return data();
     }
     pointer data() {
-        return _start;
+        return const_cast< pointer >( _start );
     }
     reference operator[]( size_type index ) const {
         return *( _start + index );
@@ -106,13 +105,10 @@ public:
         if ( empty() ) {
             throw length_error( "this vector is empty\n" );
         }
-        return _start[ size() - 1 ];
+        return operator[]( size() - 1 );
     }
     const_reference back() const {
-        if ( empty() ) {
-            throw length_error( "this vector is empty\n" );
-        }
-        return const_cast< const_reference >( _start[ size() - 1 ] );
+        return back();
     }
     void clear() noexcept {
         destruct( _start, _end );
@@ -125,10 +121,7 @@ public:
         return *begin();
     }
     const_reference front() const {
-        if ( empty() ) {
-            throw length_error( "this vector is empty\n" );
-        }
-        return const_cast< const_reference >( *begin() );
+        return front();
     }
     void swap( vector& other ) noexcept {
         using std::swap;
@@ -137,16 +130,13 @@ public:
         swap( _capacity, other._capacity );
     }
     void push_back( const value_type& val ) {
-        if ( check_capacity() ) {
-            expand();
-        }
-        _alloc.construct( _end++, val );
+        push_back( std::move( val ) );
     }
     void push_back( value_type&& val ) {
         if ( check_capacity() ) {
             expand();
         }
-        new ( _end++ ) value_type( std::move( val ) );
+        _alloc.construct( _end++, std::forward< value_type >( val ) );
     }
     void pop_back() {
         if ( empty() ) {
@@ -168,7 +158,7 @@ public:
             else {
                 difference_type distance = n - size();
                 while ( distance-- ) {
-                    *( _end++ ) = value_type();
+                    _alloc.construct( _end++, value_type() );
                 }
             }
         }
@@ -177,7 +167,7 @@ public:
             expand_enough( new_capacity );
             difference_type distance = n - size();
             while ( distance-- ) {
-                *( _end++ ) = value_type();
+                _alloc.construct( _end++, value_type() );
             }
         }
     }
@@ -191,7 +181,7 @@ public:
             else {
                 difference_type distance = n - size();
                 while ( distance-- ) {
-                    *( _end++ ) = val;
+                    _alloc.construct( _end++, std::move( val ) );
                 }
             }
         }
@@ -200,7 +190,7 @@ public:
             expand_enough( new_capacity );
             difference_type distance = n - size();
             while ( distance-- ) {
-                *( _end++ ) = val;
+                _alloc.construct( _end++, std::move( val ) );
             }
         }
     }
@@ -243,17 +233,15 @@ public:
         }
     }
     void assign( initializer_list< value_type > il ) {
-        assign( il.size(), il.begin(), il.end() );
+        assign( il.begin(), il.end() );
     }
     iterator erase( const_iterator pos ) {
         if ( pos < cbegin() || pos >= cend() ) {
             throw out_of_range( "this posing is invalid\n" );
         }
         auto p = const_cast< iterator >( pos );
-        if ( pos + 1 != cend() ) {
-            std::move( pos + 1, cend(), p );
-        }
-        _alloc.destroy( --_end );
+        std::move( pos + 1, cend(), p );
+        _alloc.destroy( _end-- );
         return p;
     }
     iterator erase( const_iterator first, const_iterator last ) {
@@ -263,24 +251,16 @@ public:
         auto iter = std::move( const_cast< iterator >( last ), _end, const_cast< iterator >( first ) );
         destruct( first, last );
         _end = iter;
-        return to_non_const( first );
+        return const_cast< iterator >( first );
     }
-    iterator insert( const_iterator pos, const value_type& val ) {
-        auto p = const_cast< iterator >( pos );
-        if ( _end == _capacity ) {
-            auto offset = pos - const_cast< const_iterator >( _start );
+    iterator insert( const_iterator pos, value_type& val ) {
+        auto offset = pos - _start;
+        if ( check_capacity() ) {
             expand();
-            p = _start + offset;
         }
-        size_t distance = static_cast< size_t >( _end - pos );
-        auto   tmp      = _end - 1;
-        _end++;
-        while ( distance-- ) {
-            *( tmp + 1 ) = std::move( *tmp );
-            --tmp;
-        }
-        *p = val;
-        return p;
+        std::move( _start + offset, _end++, _start + offset + 1 );
+        *( _start + offset ) = val;
+        return _start + offset;
     }
     iterator insert( const_iterator pos, size_type n, const value_type& val ) {
         auto p        = const_cast< iterator >( pos );
@@ -328,21 +308,13 @@ public:
         return p;
     }
     iterator insert( const_iterator pos, value_type&& val ) {
-        auto p = const_cast< iterator >( pos );
-        if ( _end == _capacity ) {
-            auto offset = pos - const_cast< const_iterator >( _start );
+        auto offset = pos - _start;
+        if ( check_capacity() ) {
             expand();
-            p = _start + offset;
         }
-        size_t distance = static_cast< size_t >( _end - pos );
-        auto   tmp      = _end - 1;
-        _end++;
-        while ( distance-- ) {
-            *( tmp + 1 ) = std::move( *tmp );
-            --tmp;
-        }
-        *p = val;
-        return p;
+        std::move( _start + offset, _end++, _start + offset + 1 );
+        *( _start + offset ) = std::forward< value_type >( val );
+        return _start + offset;
     }
     iterator insert( const_iterator pos, initializer_list< value_type > il ) {
         return insert( pos, il.begin(), il.end() );
@@ -353,6 +325,14 @@ public:
             expand();
         }
         _alloc.construct( _end++, std::forward< Args >( args )... );
+    }
+    void shrink_to_fit() {
+        if ( check_capacity() ) {
+            // do nothing
+        }
+        else {
+            reallocate_exaclty( static_cast< size_t >( _end - _start ) );
+        }
     }
     ~vector() {
         destroy();
@@ -391,14 +371,16 @@ private:
         auto      tmp               = _start;
         size_type n                 = size();
         while ( n-- ) {
-            *( new_end++ ) = std::move( *( tmp++ ) );
+            new ( new_end ) value_type( std::move( *tmp ) );
+            ++new_end;
+            ++tmp;
         }
         destroy();
         _start    = new_start;
         _end      = new_end;
         _capacity = new_end_of_stroge;
     }
-    void destruct( iterator first, iterator end ) {
+    void destruct( const_iterator first, const_iterator end ) {
         for ( auto it = first; it != end; ++it ) {
             _alloc.destroy( it );
         }
@@ -409,8 +391,19 @@ private:
         _end          = _start;
         _capacity     = _start + n;
         for ( auto it = old_copy.begin(); it != old_copy.end(); ++it ) {
-            *( _end++ ) = std::move( *it );
+            new ( _end ) value_type( std::move( *it ) );
+            ++_end;
         }
+    }
+    void reallocate_exaclty( size_t _new_capacity ) {
+        auto new_start = _alloc.allocate( _new_capacity );
+        std::move( _start, _end, new_start );
+        auto new_end      = new_start + _new_capacity;
+        auto new_capacity = new_end;
+        destroy();
+        _start    = new_start;
+        _end      = new_end;
+        _capacity = new_capacity;
     }
 
 private:
