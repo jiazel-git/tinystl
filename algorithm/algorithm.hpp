@@ -169,4 +169,25 @@ OutputIterator remove_copy_if( InputIterator first, InputIterator last, OutputIt
     }
     return dest;
 }
+template < typename BidirectionalIterator, typename Predicate >
+BidirectionalIterator insert_sort( const BidirectionalIterator first, const BidirectionalIterator last, Predicate pred ) {
+    if ( first != last ) {
+        for ( auto mid = first; ++mid != last; ) {
+            auto hole = mid;
+            auto val  = std::move( *mid );
+            if ( pred( val, *first ) ) {
+                std::move_backward( first, mid, ++hole );
+                *first = std::move( val );
+            }
+            else {
+                for ( auto prev = hole; pred( val, *--prev ); hole = prev ) {
+                    *hole = std::move( *prev );
+                }
+                *hole = std::move( val );
+            }
+        }
+    }
+
+    return last;
+}
 }  // namespace jz

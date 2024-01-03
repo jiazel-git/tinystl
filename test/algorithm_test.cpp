@@ -1,5 +1,6 @@
 #include "algorithm.hpp"
 #include "vector.hpp"
+#include <algorithm>
 #include <functional>
 #include <iostream>
 
@@ -12,5 +13,8 @@ void test() {
     // test count_if
     auto count = jz::count_if( vec.begin(), vec.end(), std::bind( std::equal_to<>{}, 2, std::placeholders::_1 ) );
     std::cout << "count=" << count << std::endl;
+    jz::insert_sort( vec.begin(), vec.end(), std::less<>{} );
+
+    std::cout << vec;
 }
 }  // namespace jz
