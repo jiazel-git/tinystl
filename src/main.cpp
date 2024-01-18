@@ -5,9 +5,11 @@
 // #include "iterator_category.cpp"
 // #include "vector_test.cpp"
 // #include "Vector_test.cpp"
+#include "algorithm_test.cpp"
 #include "list.hpp"
 #include "stack.hpp"
 #include "vector.hpp"
+#include <algorithm>
 #include <forward_list>
 
 struct comp {
@@ -16,13 +18,5 @@ struct comp {
     }
 };
 int main( int argc, char** argv ) {
-    // jz::test();
-    jz::list< int >     l{ 1, 2, 3, 4, 5 };
-    auto                it = l.begin();
-    forward_list< int > fl{ 1, 2, 3, 4, 5 };
-    fl.push_front( 6 );
-    for ( auto& it : fl ) {
-        cout << it << " ";
-    }
-    return 0;
+    jz::test();
 }
