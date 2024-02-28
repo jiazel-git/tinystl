@@ -9,6 +9,10 @@
 #include <mutex>
 
 namespace jz {
+
+template < typename _Ty >
+class shared_ptr;
+
 // 引用计数基类，用来控制指针引用情况
 class ref_count_base {
 
@@ -30,7 +34,9 @@ public:
     ref_count_base& operator=( const ref_count_base& ) = delete;
     virtual ~ref_count_base() noexcept {}
 
-    bool incref_nz() noexcept {}
+    bool incref_nz() noexcept {
+        return true;
+    }
     void incwref() noexcept {
         lock_and_incwref();
     }
@@ -156,11 +162,38 @@ protected:
     }
 
     template < typename _Ty2 >
-    void alias_construct_from( const shard_ptr< _Ty2 >& other, element_type* px ) noexcept {
+    void alias_construct_from( const shared_ptr< _Ty2 >& other, element_type* px ) noexcept {
         other.incref();
 
         _ptr = px;
         _rep = other._rep;
+    }
+
+    template < typename _Ty2 >
+    void alias_move_construct_from( shared_ptr< _Ty2 >&& other, element_type* px ) noexcept {
+        _ptr = px;
+        _rep = other._rep;
+
+        other.ptr  = nullptr;
+        other._rep = nullptr;
+    }
+
+    void incref() const noexcept {
+        if ( _rep ) {
+            _rep->incref();
+        }
+    }
+
+    void decref() const noexcept {
+        if ( _rep ) {
+            _rep->decref();
+        }
+    }
+
+    void swap( ptr_base& right ) {
+        using std::swap;
+        swap( _ptr, right._ptr );
+        swap( _rep, right._rep );
     }
 
 private:
@@ -170,9 +203,118 @@ private:
     template < class _Ty0 >
     friend class ptr_base;
 
-    friend shard_ptr< _Ty >;
+    friend shared_ptr< _Ty >;
 };
 
 template < typename _Ty >
-class shard_ptr : public ptr_base< _Ty > {};
+class shared_ptr : public ptr_base< _Ty > {
+private:
+    using _mybase = ptr_base< _Ty >;
+
+public:
+    using typename _mybase::element_type;
+
+    constexpr shared_ptr() noexcept = default;
+
+    constexpr shared_ptr( nullptr_t ) noexcept {}
+
+    template < typename _Ux,
+               std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Ux >, std::_Can_scalar_delete< _Ux > >, std::_SP_convertible< _Ux, _Ty > >,
+                                 int > = 0 >
+    explicit shared_ptr( _Ux* px ) {
+        if ( std::is_array_v< _Ty > ) {
+            setpd( px, std::default_delete< _Ux[] >{} );
+        }
+        else {
+            set_ptr_rep_and_enable_shared( px, new ref_count< _Ux >( px ) );
+        }
+    }
+
+    template < typename _Ux,
+               typename _Dx,
+               std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Ux >, std::_Can_scalar_delete< _Ux > >, std::_SP_convertible< _Ux, _Ty > >,
+                                 int > = 0 >
+    explicit shared_ptr( _Ux* px, _Dx dx ) {
+        setpd( px, std::move( dx ) );
+    }
+
+    template < typename _Dx,
+               std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Dx >, std::_Can_scalar_delete< _Dx > >, std::_SP_convertible< _Dx, _Ty > >,
+                                 int > = 0 >
+    explicit shared_ptr( nullptr_t, _Dx dx ) {
+        setpd( nullptr, std::move( dx ) );
+    }
+
+    template < typename _Ty2 >
+    shared_ptr( const shared_ptr< _Ty2 >& right, element_type* px ) noexcept {
+        this->alias_construct_from( right, px );
+    }
+
+    template < typename _Ty2 >
+    shared_ptr( shared_ptr< _Ty2 >&& right, element_type* px ) noexcept {
+        this->alias_move_construct_from( std::move( right ), px );
+    }
+
+    shared_ptr( const shared_ptr& other ) noexcept {
+        this->copy_construct_from( other );
+    }
+
+    shared_ptr( shared_ptr&& other ) noexcept {
+        this->move_construct_from( std::move( other ) );
+    }
+
+    template < class _Ty2, std::enable_if_t< std::_SP_pointer_compatible< _Ty2, _Ty >::value, int > = 0 >
+    shared_ptr( shared_ptr< _Ty2 >&& right ) noexcept {  // construct shared_ptr object that takes resource from _Right
+        this->move_construct_from( _STD move( right ) );
+    }
+    ~shared_ptr() noexcept {
+        this->decref();
+    }
+
+    shared_ptr& operator=( const shared_ptr& right ) noexcept {
+        shared_ptr( right ).swap( *this );
+        return *this;
+    }
+
+    template < typename _Ty2 >
+    shared_ptr& operator=( const shared_ptr< _Ty2 >& right ) noexcept {
+        shared_ptr( right ).swap( *this );
+        return *this;
+    }
+
+    shared_ptr& operator=( shared_ptr&& right ) noexcept {
+        shared_ptr( std::move( right ) ).swap( *this );
+        return *this;
+    }
+
+    template < typename _Ty2 >
+    shared_ptr& operator=( shared_ptr< _Ty2 >&& right ) noexcept {
+        shared_ptr( std::move( right ) ).swap( *this );
+        return *this;
+    }
+    void swap( shared_ptr& other ) noexcept {
+        this->swap( other );
+    }
+
+    void reset() noexcept {
+        shared_ptr().swap( *this );
+    }
+
+    template < typename _Ux >
+    void reset( _Ux px ) {
+        shared_ptr( px ).swap( *this );
+    }
+
+    template < typename _Ux, typename _Dx >
+    void reset( _Ux* px, _Dx dx ) {
+        shared_ptr( px, dx ).swap( *this );
+    }
+
+private:
+    template < typename _UxptrOrNullptr, typename _Dx >
+    void setpd( const _UxptrOrNullptr px, _Dx dx ) {}
+
+    template < typename _Ux >
+    void set_ptr_rep_and_enable_shared( const _Ux* px, ref_count_base* rx ) noexcept {}
+};
 }  // namespace jz
