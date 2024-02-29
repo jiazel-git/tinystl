@@ -75,7 +75,9 @@ private:
         std::lock_guard< std::mutex > lg{ _mutex };
         if ( --_uses == 0 ) {
             destroy();
-            decwref();
+            if ( --_weaks == 0 ) {
+                delete_this();
+            }
         }
     }
 };
@@ -99,7 +101,7 @@ private:
 
 // 真正的引用计数资源
 template < typename _Resource, typename _Dx >
-class ref_count_resource : ref_count_base {
+class ref_count_resource : public ref_count_base {
 public:
     ref_count_resource( _Resource resource, _Dx deleter ) : ref_count_base(), _resource( resource ), _deleter( std::move( deleter ) ) {}
     virtual ~ref_count_resource() noexcept override = default;
@@ -218,29 +220,32 @@ public:
 
     constexpr shared_ptr( nullptr_t ) noexcept {}
 
-    template < typename _Ux,
+    /*template < typename _Ux,
                std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Ux >, std::_Can_scalar_delete< _Ux > >, std::_SP_convertible< _Ux, _Ty > >,
-                                 int > = 0 >
-    explicit shared_ptr( _Ux* px ) {
-        if ( std::is_array_v< _Ty > ) {
-            setpd( px, std::default_delete< _Ux[] >{} );
+                                 int > = 0 >*/
+    // template < typename _Ux, typename std::enable_if< std::is_convertible< _Ty, _Ux >::value, int >::type >
+    explicit shared_ptr( element_type* px ) {
+        if ( std::is_array< _Ty >::value ) {
+            setpd( px, std::default_delete< element_type[] >{} );
         }
         else {
-            set_ptr_rep_and_enable_shared( px, new ref_count< _Ux >( px ) );
+            set_ptr_rep_and_enable_shared( px, new ref_count< element_type >( px ) );
         }
     }
 
-    template < typename _Ux,
+    /*template < typename _Ux,
                typename _Dx,
                std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Ux >, std::_Can_scalar_delete< _Ux > >, std::_SP_convertible< _Ux, _Ty > >,
-                                 int > = 0 >
-    explicit shared_ptr( _Ux* px, _Dx dx ) {
+                                 int > = 0 >*/
+    template < typename _Dx >
+    explicit shared_ptr( element_type* px, _Dx dx ) {
         setpd( px, std::move( dx ) );
     }
 
-    template < typename _Dx,
+    /*template < typename _Dx,
                std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Dx >, std::_Can_scalar_delete< _Dx > >, std::_SP_convertible< _Dx, _Ty > >,
-                                 int > = 0 >
+                                 int > = 0 >*/
+    template < typename _Dx >
     explicit shared_ptr( nullptr_t, _Dx dx ) {
         setpd( nullptr, std::move( dx ) );
     }
@@ -263,9 +268,10 @@ public:
         this->move_construct_from( std::move( other ) );
     }
 
-    template < class _Ty2, std::enable_if_t< std::_SP_pointer_compatible< _Ty2, _Ty >::value, int > = 0 >
+    // template < class _Ty2, std::enable_if_t< std::_SP_pointer_compatible< _Ty2, _Ty >::value, int > = 0 >
+    template < class _Ty2 >
     shared_ptr( shared_ptr< _Ty2 >&& right ) noexcept {  // construct shared_ptr object that takes resource from _Right
-        this->move_construct_from( _STD move( right ) );
+        this->move_construct_from( std::move( right ) );
     }
     ~shared_ptr() noexcept {
         this->decref();
@@ -310,11 +316,44 @@ public:
         shared_ptr( px, dx ).swap( *this );
     }
 
+    using _mybase::get;
+    // template < typename _Ty2 = _Ty, std::enable_if_t< !std::disjunction_v< std::is_array< _Ty2 >, std::is_void< _Ty2 > >, int > >
+    template < typename _Ty2 = _Ty >
+    _Ty2& operator*() const noexcept {
+        return *get();
+    }
+
+    // template < typename _Ty2 = _Ty, std::enable_if_t< !std::is_array_v< _Ty2 >, int > = 0 >
+    template < typename _Ty2 = _Ty >
+    _Ty2* operator->() const noexcept {
+        return get();
+    }
+
+    // template < typename _Ty2 = _Ty, typename _Elem = element_type, std::enable_if_t< std::is_array_v< _Ty2 > > = 0 >
+    template < typename _Ty2 = _Ty, typename _Elem = element_type, std::enable_if_t< std::is_array< _Ty2 >::value > = 0 >
+    _Elem& operator[]( std::ptrdiff_t idx ) const noexcept {
+        return get()[ idx ];
+    }
+
+    explicit operator bool() const noexcept {
+        return get() != nullptr;
+    }
+
 private:
     template < typename _UxptrOrNullptr, typename _Dx >
-    void setpd( const _UxptrOrNullptr px, _Dx dx ) {}
+    void setpd( const _UxptrOrNullptr px, _Dx dx ) {
+        set_ptr_rep_and_enable_shared( px, new ref_count_resource< _UxptrOrNullptr, _Dx >( px, std::move( dx ) ) );
+    }
 
     template < typename _Ux >
-    void set_ptr_rep_and_enable_shared( const _Ux* px, ref_count_base* rx ) noexcept {}
+    void set_ptr_rep_and_enable_shared( _Ux* const px, ref_count_base* const rx ) noexcept {
+        this->_ptr = px;
+        this->_rep = rx;
+    }
+
+    void set_ptr_rep_and_enable_shared( nullptr_t, ref_count_base* const rx ) noexcept {
+        this->_ptr = nullptr;
+        this->_rep = rx;
+    }
 };
 }  // namespace jz
