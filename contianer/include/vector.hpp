@@ -353,7 +353,8 @@ private:
         _end      = _start;
         _capacity = _start + n;
         while ( first != last ) {
-            *( _end++ ) = *( first++ );
+            //*( _end++ ) = *( first++ ); //迭代器会失效
+            _alloc.construct( _end++, *( first++ ) );
         }
     }
     void destroy() {
