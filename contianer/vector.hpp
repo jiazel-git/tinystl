@@ -5,7 +5,8 @@
 #include <memory>
 
 using namespace std;
-namespace jz {
+namespace jz
+{
 template < typename T, typename Alloc = std::allocator< T > >
 class vector {
 public:
@@ -136,13 +137,14 @@ public:
         if ( check_capacity() ) {
             expand();
         }
-        _alloc.construct( _end++, std::forward< value_type >( val ) );
+
+        std::allocator_traits< allocator >::construct( _alloc, _end++, std::forward< value_type >( val ) );
     }
     void pop_back() {
         if ( empty() ) {
             throw length_error( "this vector is empty\n" );
         }
-        _alloc.destroy( _end-- );
+        std::allocator_traits< allocator >::destroy( _alloc, _end++ );
     }
     bool empty() const {
         return _start == _end;
@@ -154,20 +156,20 @@ public:
                 difference_type distance = size() - n;
                 _end                     = _start + n;
                 destruct( _end, _end + n );
-            }
-            else {
+            } else {
                 difference_type distance = n - size();
                 while ( distance-- ) {
-                    _alloc.construct( _end++, value_type() );
+
+                    std::allocator_traits< allocator >::construct( _alloc, _end++, value_type() );
                 }
             }
-        }
-        else {
+        } else {
             auto new_capacity = n;
             expand_enough( new_capacity );
             difference_type distance = n - size();
             while ( distance-- ) {
-                _alloc.construct( _end++, value_type() );
+
+                std::allocator_traits< allocator >::construct( _alloc, _end++, value_type() );
             }
         }
     }
@@ -177,20 +179,20 @@ public:
                 difference_type distance = size() - n;
                 _end                     = _start + n;
                 destruct( _end, _end + n );
-            }
-            else {
+            } else {
                 difference_type distance = n - size();
                 while ( distance-- ) {
-                    _alloc.construct( _end++, std::move( val ) );
+
+                    std::allocator_traits< allocator >::construct( _alloc, _end++, std::move( val ) );
                 }
             }
-        }
-        else {
+        } else {
             auto new_capacity = n;
             expand_enough( new_capacity );
             difference_type distance = n - size();
             while ( distance-- ) {
-                _alloc.construct( _end++, std::move( val ) );
+
+                std::allocator_traits< allocator >::construct( _alloc, _end++, std::move( val ) );
             }
         }
     }
@@ -209,8 +211,7 @@ public:
                 *( new_end++ ) = *( first++ );
             }
             _end = new_end;
-        }
-        else {
+        } else {
             if ( _start ) {
                 destroy();
             }
@@ -224,8 +225,7 @@ public:
                 *( new_end++ ) = val;
             }
             _end = new_end;
-        }
-        else {
+        } else {
             if ( _start ) {
                 destroy();
             }
@@ -241,7 +241,7 @@ public:
         }
         auto p = const_cast< iterator >( pos );
         std::move( pos + 1, cend(), p );
-        _alloc.destroy( _end-- );
+        std::allocator_traits< allocator >::destroy( _alloc, _end-- );
         return p;
     }
     iterator erase( const_iterator first, const_iterator last ) {
@@ -324,13 +324,12 @@ public:
         if ( _end == _capacity ) {
             expand();
         }
-        _alloc.construct( _end++, std::forward< Args >( args )... );
+        std::allocator_traits< allocator >::construct( _alloc, _end++, std::forward< Args >( args )... );
     }
     void shrink_to_fit() {
         if ( check_capacity() ) {
             // do nothing
-        }
-        else {
+        } else {
             reallocate_exaclty( static_cast< size_t >( _end - _start ) );
         }
     }
@@ -344,7 +343,8 @@ private:
         _end      = _start;
         _capacity = _start + n;
         while ( n-- ) {
-            _alloc.construct( _end++, val );
+
+            std::allocator_traits< allocator >::construct( _alloc, _end++, val );
         }
     }
     template < typename InputIterator >
@@ -354,7 +354,8 @@ private:
         _capacity = _start + n;
         while ( first != last ) {
             //*( _end++ ) = *( first++ ); //迭代器会失效
-            _alloc.construct( _end++, *( first++ ) );
+
+            std::allocator_traits< allocator >::construct( _alloc, _end++, *( first++ ) );
         }
     }
     void destroy() {
@@ -383,7 +384,7 @@ private:
     }
     void destruct( const_iterator first, const_iterator end ) {
         for ( auto it = first; it != end; ++it ) {
-            _alloc.destroy( it );
+            std::allocator_traits< allocator >::destroy( _alloc, it );
         }
     }
     void expand_enough( size_t n ) {

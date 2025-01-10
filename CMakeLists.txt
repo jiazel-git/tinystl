@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(tinystl VERSION 0.1.0)
 
-set(CXX_STANDARD 11)
-include_directories(../test)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+include_directories(./test)
 add_subdirectory(algorithm)
 message("algorithm ok")
 add_subdirectory(contianer)
