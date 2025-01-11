@@ -1,5 +1,7 @@
-#include "algorithm.h"
 #include "vector.hpp"
+
+#include "algorithm.h"
+
 #include <algorithm>
 #include <functional>
 #include <iostream>
