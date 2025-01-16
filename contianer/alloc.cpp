@@ -1,7 +1,6 @@
 #ifndef _JZALLOC_
 #define _JZALLOC_
 
-#include "A.h"
 #include <climits>   // for UINT_MAX
 #include <cstddef>   // for pridiff_t, size_t
 #include <cstdlib>   // for exit()
@@ -9,7 +8,8 @@
 #include <new>       // for placement new
 #include <vector>
 
-namespace jz {
+namespace jz
+{
 
 // 分配内存
 template < typename T >
@@ -42,8 +42,7 @@ inline void _destory( T* ptr ) {
 
 // 定义allocator
 template < typename T >
-class allocator
-{
+class allocator {
 public:
     typedef T         value_type;
     typedef T*        pointer;
@@ -75,14 +74,7 @@ public:
         return size_type( UINTMAX_MAX / sizeof( T ) );
     }
 };
-void test() {
-    std::vector< A, allocator< A > > v;
-    A                                a1( 7.9226, "USD/CNY" );
-    v.push_back( a1 );
-    for ( auto& it : v ) {
-        cout << it;
-    }
-}
+void test() {}
 };  // namespace jz
 
 #endif

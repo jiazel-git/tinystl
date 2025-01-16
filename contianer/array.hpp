@@ -296,4 +296,14 @@ public:
 public:
     value_type _Elems[ _Size ];
 };
+
+template < class _First, class... _Ret >
+struct _Elems_all_Same
+{
+    static_assert( std::conjunction_v< std::is_same< _First, _Ret >... >, "all elements should be same type" );
+    using type = _First;
+};
+
+template < class _First, class... _Ret >
+array( _First, _Ret... ) -> array< typename _Elems_all_Same< _First, _Ret... >::type, 1 + sizeof...( _Ret ) >;
 }  // namespace jz
