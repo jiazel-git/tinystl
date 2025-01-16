@@ -2,7 +2,8 @@
 #define __STACK
 #include "vector.hpp"
 #include <vector>
-namespace jz {
+namespace jz
+{
 template < class T, class Container = jz::vector< T > >
 class stack {
 public:
@@ -82,5 +83,7 @@ public:
 private:
     container_type _container;
 };
+template < class _Begin, class _End >
+stack( _Begin, _End ) -> stack< typename iterator_traits< _Begin >::value_type >;
 }  // namespace jz
 #endif

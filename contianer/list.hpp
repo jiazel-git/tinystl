@@ -1,7 +1,8 @@
 #pragma once
 #include "iterator.hpp"
 #include <memory>
-namespace jz {
+namespace jz
+{
 template < class T >
 struct list_node
 {
@@ -25,8 +26,7 @@ struct list_node
     using const_pointer   = const T*;
 };
 template < class T >
-class list_const_iterator
-{
+class list_const_iterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type        = typename T::value_type;
@@ -99,8 +99,7 @@ protected:
     node_raw_ptr _cur;
 };
 template < class T >
-class list_iterator : public list_const_iterator< T >
-{
+class list_iterator : public list_const_iterator< T > {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type        = typename T::value_type;
@@ -179,8 +178,7 @@ void swap( list_iterator< T >& left, list_iterator< T >& right ) {
     swap( left.data(), right.data() );
 }
 template < class T >
-class list
-{
+class list {
 public:
     using node_raw_ptr = list_node< T >*;
     using node_ptr     = std::unique_ptr< list_node< T > >;
@@ -386,8 +384,7 @@ public:
             if ( comp( *it1, *it2 ) ) {
                 new_list.push_back( *it1 );
                 ++it1;
-            }
-            else {
+            } else {
                 new_list.push_back( *it2 );
                 ++it2;
             }
@@ -427,8 +424,7 @@ public:
         for ( auto it = cbegin(); it != cend(); ) {
             if ( *it == value ) {
                 it = erase( it );
-            }
-            else {
+            } else {
                 ++it;
             }
         }
@@ -438,8 +434,7 @@ public:
         for ( auto it = cbegin(); it != cend(); ) {
             if ( _Pred( *it ) ) {
                 it = erase( it );
-            }
-            else {
+            } else {
                 ++it;
             }
         }
@@ -450,8 +445,7 @@ public:
             while ( num-- ) {
                 pop_back();
             }
-        }
-        else {
+        } else {
             auto num = n - _size;
             while ( num-- ) {
                 push_back( value_type() );
@@ -464,8 +458,7 @@ public:
             while ( num-- ) {
                 pop_back();
             }
-        }
-        else {
+        } else {
             auto num = n - _size;
             while ( num-- ) {
                 push_back( std::move( value ) );
@@ -511,8 +504,7 @@ public:
         while ( current != last ) {
             if ( binary_pred( *prev, *current ) ) {
                 current = erase( current );
-            }
-            else {
+            } else {
                 prev = current;
                 ++current;
             }
@@ -540,4 +532,7 @@ private:
     node_raw_ptr _tail;
     size_t       _size;
 };
+
+template < class _Begin, class _End >
+list( _Begin, _End ) -> list< typename iterator_traits< _Begin >::value_type >;
 }  // namespace jz

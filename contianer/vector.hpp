@@ -415,4 +415,7 @@ private:
     allocator _alloc;
 };
 
+template < class _Begin, class _End >
+vector( _Begin, _End ) -> vector< typename iterator_traits< _Begin >::value_type >;
+
 }  // namespace jz

@@ -1,7 +1,8 @@
 #ifndef __QUEUE
 #define __QUEUE
 #include "list.hpp"
-namespace jz {
+namespace jz
+{
 template < class T, class Container = jz::list< T > >
 class queue {
 public:
@@ -81,5 +82,7 @@ public:
 private:
     Container _container;
 };
+template < class _Begin, class _End >
+queue( _Begin, _End ) -> queue< typename iterator_traits< _Begin >::value_type >;
 }  // namespace jz
 #endif

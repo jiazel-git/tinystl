@@ -3,9 +3,11 @@
 #include "iterator.hpp"
 #include <cstdlib>
 #include <iostream>
-namespace jz {
+namespace jz
+{
 template < class T >
-struct node_base {
+struct node_base
+{
     T          value_;
     node_base* next_;
     node_base() : value_(), next_( nullptr ) {}
@@ -353,6 +355,7 @@ private:
     size_type size_;
     // allocate_ alloc_;
 };
-
+template < class _Begin, class _End >
+forward_list( _Begin, _End ) -> forward_list< typename iterator_traits< _Begin >::value_type >;
 }  // namespace jz
 #endif
