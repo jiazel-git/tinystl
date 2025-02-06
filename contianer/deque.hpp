@@ -1,5 +1,6 @@
 #pragma once
 #include "iterator.hpp"
+#include <algorithm>
 namespace jz
 {
 template < class _Ty, size_t _Bsize >
@@ -198,7 +199,33 @@ public:
     deque() = default;
 
 private:
-    void _Growblock() {}
+    void _Growblock( size_type _Count ) {
+        size_type _New_blocks = _Blocks > 0 ? _Blocks : 1;
+        if ( _New_blocks - _Blocks < _Count || _New_blocks < _Min_Blocks ) {
+            _New_blocks *= 2;
+        }
+
+        _Count              = _New_blocks - _New_blocks;
+        size_type _Boff     = _Off / _Bsize;
+        auto      _New_cont = _Aloc.allocate( _Blocks + _Count );
+        auto      _Ptr      = _New_cont + _Boff;
+
+        _Ptr = std::uninitialized_copy( _Cont + _Boff, _Cont + _Blocks, _Ptr );
+        if ( _Boff <= _Count ) {
+            _Ptr = std::uninitialized_copy( _Cont, _Cont + _Boff, _Ptr );
+            std::uninitialized_value_construct_n( _Ptr, _Count - _Boff );
+            std::uninitialized_value_construct_n( _New_cont, _Boff );
+        } else {
+            std::uninitialized_copy( _Cont, _Cont + _Count, _Ptr );
+            _Ptr = std::uninitialized_copy( _Cont + _Count, _Cont + _Boff, _Ptr );
+            std::uninitialized_value_construct_n( _Ptr, _Count );
+        }
+        std::_Destroy_range( _Cont + _Boff, _Cont + _Blocks );
+        _Aloc.deallocate( _Cont, _Blocks );
+
+        _Cont = _New_cont;
+        _Blocks += _Count;
+    }
 
 private:
     pointer       _Cont{ nullptr };  // thep pointer to blocks
