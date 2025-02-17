@@ -10,7 +10,7 @@ namespace jz
 template < class _Mydeque >
 class _Deque_const_iterator {
 public:
-    using iterator_category = random_access_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
     using value_type        = _Mydeque::value_type;
     using reference         = _Mydeque::const_reference;
     using pointer           = _Mydeque::const_pointer;
@@ -116,7 +116,7 @@ public:
     using _Mybase = _Deque_const_iterator< _Mydeque >;
 
 public:
-    using iterator_category = random_access_iterator_tag;
+    using iterator_category = std::random_access_iterator_tag;
     using value_type        = _Mydeque::value_type;
     using reference         = _Mydeque::reference;
     using pointer           = _Mydeque::pointer;
@@ -158,14 +158,25 @@ public:
     }
 
     [[nodiscard]] inline _Deque_iterator operator+( const difference_type _Of ) noexcept {
-        _Mybase::operator+( _Of );
+        ( void )_Mybase::operator+( _Of );
         return *this;
+    }
+
+    inline _Deque_iterator& operator--() noexcept {
+        _Mybase::operator--();
+        return *this;
+    }
+
+    inline _Deque_iterator operator--( int ) noexcept {
+        auto _Copy = *this;
+        _Mybase::operator--();
+        return _Copy;
     }
 
     using _Mybase::operator-;
 
     [[nodiscard]] inline _Deque_iterator operator-( const difference_type _Of ) noexcept {
-        _Mybase::operator-( _Of );
+        ( void )_Mybase::operator-( _Of );
         return *this;
     }
 
@@ -181,17 +192,19 @@ private:
     static constexpr size_t _Bsize      = _Bytes <= 1 ? 16 : _Bytes <= 2 ? 8 : _Bytes <= 4 ? 4 : _Bytes <= 8 ? 2 : 1;
 
 public:
-    using value_type         = _Ty;
-    using reference          = _Ty&;
-    using const_reference    = const _Ty&;
-    using pointer            = _Ty*;
-    using const_pointer      = const _Ty*;
-    using size_type          = size_t;
-    using difference_type    = ptrdiff_t;
-    using iterator           = _Deque_iterator< deque >;
-    using const_iterator     = _Deque_const_iterator< deque >;
-    using allocate_type      = _Alloc;
-    using cont_allocate_type = std::allocator_traits< _Alloc >::template rebind_alloc< typename std::allocator_traits< _Alloc >::pointer >;
+    using value_type             = _Ty;
+    using reference              = _Ty&;
+    using const_reference        = const _Ty&;
+    using pointer                = _Ty*;
+    using const_pointer          = const _Ty*;
+    using size_type              = size_t;
+    using difference_type        = ptrdiff_t;
+    using iterator               = _Deque_iterator< deque >;
+    using const_iterator         = _Deque_const_iterator< deque >;
+    using allocate_type          = _Alloc;
+    using cont_allocate_type     = std::allocator_traits< _Alloc >::template rebind_alloc< typename std::allocator_traits< _Alloc >::pointer >;
+    using reverse_iterator       = std::reverse_iterator< iterator >;
+    using const_reverse_iterator = std::reverse_iterator< const_iterator >;
 
 private:
     using _Contptr = pointer*;
@@ -347,20 +360,40 @@ public:
             emplace_back( _Val );
         }
     }
+    iterator insert( const_iterator _Where, value_type&& _Val ) {
+        return emplace( _Where, std::move( _Val ) );
+    }
     template < class... _Args >
-    iterator emplace( iterator _Where, _Args&&... _Arg ) {}
+    iterator emplace( const_iterator _Where, _Args&&... _Arg ) {
+        auto _Off = static_cast< difference_type >( _Where - begin() );
 
-public:
-    [[nodiscard]] inline bool empty() const noexcept {
-        return _Size == 0;
+        if ( _Off < _Size / 2 ) {
+            emplace_front( std::forward< _Args >( _Arg )... );
+            std::rotate( begin(), std::next( begin() ), begin() + static_cast< difference_type >( 1 + _Off ) );
+        } else {
+            emplace_back( std::forward< _Args >( _Arg )... );
+            std::rotate( begin() + _Off, std::prev( end() ), end() );
+        }
+        return begin() + _Off;
     }
 
+    deque( std::initializer_list< _Ty > _Il, const _Alloc& _Al ) : _Aloc( _Al ) {
+        _Construct( _Il.begin(), _Il.end() );
+    }
+
+    deque& operator=( std::initializer_list< _Ty > _Il ) {
+        auto _Tmp{ _Il };
+        *this = _Tmp;
+        return *this;
+    }
+
+public:
     [[nodiscard]] inline iterator begin() noexcept {
         return iterator( this, _Off );
     }
 
     [[nodiscard]] inline const_iterator begin() const noexcept {
-        return const_iterator( const_cast< deque< value_type >* >( this ), _Off );
+        return const_iterator( const_cast< deque* >( this ), _Off );
     }
 
     [[nodiscard]] inline iterator end() noexcept {
@@ -368,7 +401,7 @@ public:
     }
 
     [[nodiscard]] inline const_iterator end() const noexcept {
-        return const_iterator( const_cast< deque< value_type >* >( this ), _Off + _Size );
+        return const_iterator( const_cast< deque* >( this ), _Off + _Size );
     }
 
     [[nodiscard]] inline _Contptr data() const noexcept {
@@ -377,6 +410,88 @@ public:
 
     [[nodiscard]] inline size_type bsize() const noexcept {
         return _Bsize;
+    }
+
+    [[nodiscard]] inline reverse_iterator rbegin() noexcept {
+        return reverse_iterator( end() );
+    }
+
+    [[nodiscard]] inline const_reverse_iterator rbegin() const noexcept {
+        return const_reverse_iterator( end() );
+    }
+
+    [[nodiscard]] inline reverse_iterator rend() noexcept {
+        return reverse_iterator( begin() );
+    }
+
+    [[nodiscard]] inline const_reverse_iterator rend() const noexcept {
+        return const_reverse_iterator( begin() );
+    }
+
+    [[nodiscard]] inline const_iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    [[nodiscard]] inline const_iterator cend() const noexcept {
+        return end();
+    }
+
+    [[nodiscard]] inline const_reverse_iterator crbegin() const noexcept {
+        return rbegin();
+    }
+
+    [[nodiscard]] inline const_reverse_iterator crend() const noexcept {
+        return rend();
+    }
+
+    void shrink_to_fit() {
+        // todo
+    }
+
+    [[nodiscard]] inline size_type size() const noexcept {
+        return _Size;
+    }
+
+    [[nodiscard]] inline bool empty() const noexcept {
+        return size() == 0;
+    }
+
+    [[nodiscard]] inline reference operator[]( const size_type _Pos ) noexcept {
+        return *( begin() + _Pos );
+    }
+
+    [[nodiscard]] inline reference at( const size_type _Pos ) {
+        if ( _Pos >= _Size ) {
+            throw std::out_of_range( "_Pos is out of range" );
+        }
+        return operator[]( _Pos );
+    }
+
+    [[nodiscard]] inline const_reference operator[]( const size_type _Pos ) const noexcept {
+        return *( begin() + _Pos );
+    }
+
+    [[nodiscard]] inline const_reference at( const size_type _Pos ) const {
+        if ( _Pos >= _Size ) {
+            throw std::out_of_range( "_Pos is out of range" );
+        }
+        return operator[]( _Pos );
+    }
+
+    [[nodiscard]] inline reference front() noexcept {
+        return *begin();
+    }
+
+    [[nodiscard]] inline const_reference front() const noexcept {
+        return *begin();
+    }
+
+    [[nodiscard]] inline reference back() noexcept {
+        return *( std::prev( end() ) );
+    }
+
+    [[nodiscard]] inline const_reference back() const noexcept {
+        return *( std::prev( const_cast< iterator >( end() ) ) );
     }
 
 public:
@@ -418,9 +533,9 @@ private:
     void _Emplace_back_internal( _Args&&... _Arg ) {
         // std::cout << "prepare emplace arg" << std::endl;
         if ( ( _Off + _Size ) % _Bsize == 0 && ( _Size + _Bsize ) / _Bsize >= _Blocks ) {
-            std::cout << "prepare growblock cur bolcks=" << _Blocks << std::endl;
+            // std::cout << "prepare growblock cur bolcks=" << _Blocks << std::endl;
             _Growblock( 1 );
-            std::cout << "growblock finish cur bolcks=" << _Blocks << std::endl;
+            // std::cout << "growblock finish cur bolcks=" << _Blocks << std::endl;
         }
 
         _Off &= _Blocks * _Bsize - 1;
