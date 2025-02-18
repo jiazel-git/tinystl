@@ -294,11 +294,14 @@ public:
     }
 
 private:
-    void _Take_contents( deque& _Right ) {
+    void swap( deque& _Right ) {
         std::swap( _Cont, _Right._Cont );
         std::swap( _Blocks, _Right._Blocks );
         std::swap( _Size, _Right._Size );
         std::swap( _Off, _Right._Off );
+    }
+    void _Take_contents( deque& _Right ) {
+        swap( _Right );
     }
 
 public:
@@ -344,6 +347,16 @@ public:
             _Off = 0;
         }
     }
+
+    void pop_front() noexcept {
+        auto _Block = _Get_block( _Off );
+        std::allocator_traits< _Alloc >::destroy( _Aloc, _Cont[ _Block ] + _Off % _Bsize );
+        if ( --_Size == 0 ) {
+            _Off = 0;
+        } else {
+            ++_Off;
+        }
+    }
     void resize( const size_type _Newsize ) {
         while ( _Newsize < _Size ) {
             pop_back();
@@ -359,6 +372,9 @@ public:
         while ( _Newsize > _Size ) {
             emplace_back( _Val );
         }
+    }
+    void clear() noexcept {
+        _Tidy();
     }
     iterator insert( const_iterator _Where, value_type&& _Val ) {
         return emplace( _Where, std::move( _Val ) );
@@ -377,6 +393,36 @@ public:
         return begin() + _Off;
     }
 
+    iterator insert( const_iterator _Where, const value_type& _Val ) {
+        auto _Off = static_cast< difference_type >( _Where - begin() );
+
+        if ( _Off < _Size / 2 ) {
+            push_front( _Val );
+            std::rotate( begin(), std::next( begin() ), begin() + static_cast< difference_type >( 1 + _Off ) );
+        } else {
+            push_back( _Val );
+            std::rotate( begin() + _Off, std::prev( end() ), end() );
+        }
+        return begin() + _Off;
+    }
+    iterator insert( const_iterator _Where, const size_type _Count, const value_type& _Val ) {
+        auto _Off = static_cast< difference_type >( _Where - begin() );
+        _Insert_n( _Where, _Count, _Val );
+        return begin() + _Off;
+    }
+    template < class _Iter, std::enable_if_t< std::is_convertible_v< typename std::iterator_traits< _Iter >::iterator_category, std::input_iterator_tag >, int > = 0 >
+    iterator insert( const_iterator _Where, _Iter _First, _Iter _Last ) {
+        // todo
+    }
+    iterator insert( const_iterator _Where, std::initializer_list< _Ty > _Il ) {
+        return insert( _Where, _Il.begin(), _Il.end() );
+    }
+    iterator erase( const_iterator _Where ) {
+        // todo
+    }
+    iterator erase( const_iterator _First, const_iterator _Last ) noexcept {
+        // todo
+    }
     deque( std::initializer_list< _Ty > _Il, const _Alloc& _Al ) : _Aloc( _Al ) {
         _Construct( _Il.begin(), _Il.end() );
     }
@@ -445,7 +491,17 @@ public:
     }
 
     void shrink_to_fit() {
-        // todo
+        size_type _Oldcap = _Blocks * _Bsize;
+        size_type _Newcap = _Oldcap / 2;
+
+        if ( _Newcap < _Bsize * _Min_Blocks ) {
+            _Newcap = _Bsize * _Min_Blocks;
+        }
+
+        if ( ( empty() && _Blocks > 0 ) || ( !empty() && _Size <= _Newcap && _Newcap < _Oldcap ) ) {
+            deque _Tmp( std::make_move_iterator( begin() ), std::make_move_iterator( end() ) );
+            swap( _Tmp );
+        }
     }
 
     [[nodiscard]] inline size_type size() const noexcept {
@@ -564,6 +620,10 @@ private:
         }
         _Cont   = nullptr;
         _Blocks = 0;
+    }
+
+    void _Insert_n( const_iterator _Where, const size_type _Count, const value_type& _Val ) {
+        // todo
     }
 
 private:
