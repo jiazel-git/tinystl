@@ -1,12 +1,12 @@
 #ifndef _JZALLOC_
 #define _JZALLOC_
 
+#include <array>
 #include <climits>   // for UINT_MAX
 #include <cstddef>   // for pridiff_t, size_t
 #include <cstdlib>   // for exit()
 #include <iostream>  // for cerr
 #include <new>       // for placement new
-#include <vector>
 
 namespace jz
 {
@@ -71,7 +71,7 @@ public:
         return ( const_pointer )&x;
     }
     size_type max_size() const {
-        return size_type( UINTMAX_MAX / sizeof( T ) );
+        return size_type( UINT_MAX / sizeof( T ) );
     }
 };
 void test() {}

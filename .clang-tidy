@@ -1,0 +1,13 @@
+Checks: >
+  cppcoreguidelines-init-variables,
+  cppcoreguidelines-virtual-class-destructor,
+  readability-delete-null-pointer,
+  readability-else-after-return,
+  readability-non-const-parameter,
+  bugprone-raw-memory-call-on-non-trivial-type
+WarningsAsErrors:             true
+HeaderFileExtensions:         ['', 'h','hh','hpp','hxx']
+ImplementationFileExtensions: ['c','cc','cpp','cxx']
+HeaderFilterRegex:            ''
+FormatStyle:                  file
+InheritParentConfig:          true

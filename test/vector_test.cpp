@@ -1,7 +1,9 @@
-#include "A.h"
 #include "vector.hpp"
-namespace jz {
-void test() {
+#include <exception>
+#include <iostream>
+namespace jz
+{
+void testVector() {
     // 测试构造函数
     jz::vector< int > v;                                          // 默认构造函数
     jz::vector< int > v1( 5 );                                    // 构造一个大小为5的空vector
@@ -11,7 +13,6 @@ void test() {
     jz::vector< int > v5{ 1, 2, 3, 4, 5 };                        // 初始化列表构造函数
     jz::vector< int > v6( jz::vector< int >{ 6, 7, 8, 9, 10 } );  // 移动构造函数
     v5 = v6;                                                      // 拷贝赋值
-    jz::vector< A > va;
     for ( int i = 0; i < v6.size(); i++ ) {
         std::cout << v6[ i ] << " ";
     }
@@ -22,8 +23,7 @@ void test() {
     std::cout << std::endl;
     try {
         std::cout << v6.at( 6 ) << std::endl;
-    }
-    catch ( std::exception& e ) {
+    } catch ( std::exception& e ) {
         std::cout << e.what();
     }
     for ( auto it = v5.begin(); it != v5.end(); ++it ) {
@@ -62,3 +62,8 @@ void test() {
     std::cout << v7 << std::endl;
 }
 }  // namespace jz
+
+int main() {
+    jz::testVector();
+    return 0;
+}

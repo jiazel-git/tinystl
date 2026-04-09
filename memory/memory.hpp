@@ -5,10 +5,13 @@
  * @Version    :1.0
  */
 #pragma once
-#include <iostream>
+#include <cstddef>
 #include <mutex>
+#include <type_traits>
+#include <typeinfo>
 
-namespace jz {
+namespace jz
+{
 
 template < typename _Ty >
 class shared_ptr;
@@ -52,7 +55,7 @@ public:
     long use_count() const noexcept {
         return static_cast< long >( _uses );
     }
-    virtual void* get_deleter( const type_info& ) const noexcept {
+    virtual void* get_deleter( const std::type_info& ) const noexcept {
         return nullptr;
     }
 
@@ -105,7 +108,7 @@ class ref_count_resource : public ref_count_base {
 public:
     ref_count_resource( _Resource resource, _Dx deleter ) : ref_count_base(), _resource( resource ), _deleter( std::move( deleter ) ) {}
     virtual ~ref_count_resource() noexcept override = default;
-    virtual void* get_deleter( const type_info& typeID ) const noexcept override {
+    virtual void* get_deleter( const std::type_info& typeID ) const noexcept override {
         if ( typeID == typeid( _Dx ) ) {
             return const_cast< _Dx* >( &_deleter );
         }
@@ -218,7 +221,7 @@ public:
 
     constexpr shared_ptr() noexcept = default;
 
-    constexpr shared_ptr( nullptr_t ) noexcept {}
+    constexpr shared_ptr( std::nullptr_t ) noexcept {}
 
     /*template < typename _Ux,
                std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Ux >, std::_Can_scalar_delete< _Ux > >, std::_SP_convertible< _Ux, _Ty > >,
@@ -227,8 +230,7 @@ public:
     explicit shared_ptr( element_type* px ) {
         if ( std::is_array< _Ty >::value ) {
             setpd( px, std::default_delete< element_type[] >{} );
-        }
-        else {
+        } else {
             set_ptr_rep_and_enable_shared( px, new ref_count< element_type >( px ) );
         }
     }
@@ -246,7 +248,7 @@ public:
                std::enable_if_t< std::conjunction_v< std::conditional_t< std::is_array_v< _Ty >, std::_Can_array_delete< _Dx >, std::_Can_scalar_delete< _Dx > >, std::_SP_convertible< _Dx, _Ty > >,
                                  int > = 0 >*/
     template < typename _Dx >
-    explicit shared_ptr( nullptr_t, _Dx dx ) {
+    explicit shared_ptr( std::nullptr_t, _Dx dx ) {
         setpd( nullptr, std::move( dx ) );
     }
 
@@ -351,7 +353,7 @@ private:
         this->_rep = rx;
     }
 
-    void set_ptr_rep_and_enable_shared( nullptr_t, ref_count_base* const rx ) noexcept {
+    void set_ptr_rep_and_enable_shared( std::nullptr_t, ref_count_base* const rx ) noexcept {
         this->_ptr = nullptr;
         this->_rep = rx;
     }

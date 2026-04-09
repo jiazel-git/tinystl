@@ -2,12 +2,12 @@
 
 #include "algorithm.h"
 
-#include <algorithm>
 #include <functional>
 #include <iostream>
 
-namespace jz {
-void test() {
+namespace jz
+{
+void testAlgorithm() {
     vector< int > vec{ 1, 2, 3, 4, 5, 3, 2, 2, 2 };
     // test for_each
     jz::for_each( vec.begin(), vec.end(), []( int val ) { std::cout << val << " "; } );
@@ -20,3 +20,8 @@ void test() {
     std::cout << vec;
 }
 }  // namespace jz
+
+int main() {
+    jz::testAlgorithm();
+    return 0;
+}
